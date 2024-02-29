@@ -1,0 +1,25 @@
+From c5be7f023f4456eaacd917df9c44f58956feb516 Mon Sep 17 00:00:00 2001
+From: Pietro Borrello <borrello@diag.uniroma1.it>
+Date: Fri, 28 May 2021 13:57:46 +0200
+Subject: NodeIDAllocator: set Strategy::SEQ as the default
+
+---
+ lib/Util/Options.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/lib/Util/Options.cpp b/lib/Util/Options.cpp
+index ac71de5..495a317 100644
+--- a/lib/Util/Options.cpp
++++ b/lib/Util/Options.cpp
+@@ -14,7 +14,7 @@ namespace SVF
+ 
+     const llvm::cl::opt<NodeIDAllocator::Strategy> Options::NodeAllocStrat(
+         "node-alloc-strat",
+-        llvm::cl::init(NodeIDAllocator::Strategy::DEBUG),
++        llvm::cl::init(NodeIDAllocator::Strategy::SEQ),
+         llvm::cl::desc("Method of allocating (LLVM) values and memory objects as node IDs"),
+         llvm::cl::values(
+             clEnumValN(NodeIDAllocator::Strategy::DENSE, "dense", "allocate objects together and values together, separately (default)"),
+-- 
+2.17.1
+

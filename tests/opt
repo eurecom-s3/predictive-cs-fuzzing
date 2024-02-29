@@ -1,0 +1,41 @@
+#!/bin/sh
+
+ARGS=""
+PASSES_DIR="../../bin"
+
+# setup llvm env variables
+if [ -z "${LLVM_DIR}" ]; then 
+
+  if [ -z "${LLVM_CONFIG}" ]; then 
+      export LLVM_CONFIG='llvm-config'
+  fi
+
+  export LLVM_VER="$($LLVM_CONFIG --version 2>/dev/null | sed 's/git//')"
+  if [ "$LLVM_VER" = "" ]; then
+    echo "[!] llvm-config not found!"
+    exit 1
+  fi
+
+  export OPT="$($LLVM_CONFIG --bindir)/opt"
+
+else
+
+  export OPT="$LLVM_DIR/bin/opt"
+
+fi
+
+for i in $*
+do
+	arg="$i"
+	c=`echo $arg | head -c 1`
+	if [ "$c" = "-" ]; then
+		pass=`echo $arg | tail -c +2`
+		if [ -f $PASSES_DIR/$pass.so ]; then
+			arg="-load=$PASSES_DIR/$pass.so -$pass"
+		fi
+	fi
+	ARGS="$ARGS $arg"
+done
+
+echo "$OPT" $ARGS
+"$OPT" $ARGS

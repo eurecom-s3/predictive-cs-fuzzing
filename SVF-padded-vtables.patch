@@ -1,0 +1,59 @@
+From 12ede5e903bd806c984217b0fc37f873f9718248 Mon Sep 17 00:00:00 2001
+From: Pietro Borrello <borrello@diag.uniroma1.it>
+Date: Fri, 28 May 2021 13:44:45 +0200
+Subject: Fix handling of padded vtables (common in asan builds)
+
+---
+ lib/SVF-FE/CHG.cpp | 28 ++++++++++++++++++++++++++--
+ 1 file changed, 26 insertions(+), 2 deletions(-)
+
+diff --git a/lib/SVF-FE/CHG.cpp b/lib/SVF-FE/CHG.cpp
+index 00bfbcf..fef1902 100644
+--- a/lib/SVF-FE/CHG.cpp
++++ b/lib/SVF-FE/CHG.cpp
+@@ -128,7 +128,19 @@ void CHGraph::buildCHGNodes(const GlobalValue *globalvalue)
+ 
+         for (unsigned int ei = 0; ei < vtblStruct->getNumOperands(); ++ei)
+         {
+-            const ConstantArray *vtbl = SVFUtil::dyn_cast<ConstantArray>(vtblStruct->getOperand(ei));
++            Constant *operand = vtblStruct->getOperand(ei);
++            // Sometimes ASAN adds padding to vtable by embedding them in structs
++            // so we should check and unpack them
++            if (!SVFUtil::isa<ConstantArray>(operand)) {
++                ConstantStruct *opStruct = SVFUtil::dyn_cast<ConstantStruct>(operand);
++                if(!opStruct) {
++                    // We should skip handling the padding, in the form of an array
++                    assert(SVFUtil::isa<ArrayType>(operand->getType()));
++                    continue;
++                }
++                operand = opStruct->getOperand(0);
++            }
++            const ConstantArray *vtbl = SVFUtil::dyn_cast<ConstantArray>(operand);
+             assert(vtbl && "Element of initializer not an array?");
+             for (u32_t i = 0; i < vtbl->getNumOperands(); ++i)
+             {
+@@ -434,8 +446,20 @@ void CHGraph::analyzeVTables(const Module &M)
+ 
+             for (unsigned int ei = 0; ei < vtblStruct->getNumOperands(); ++ei)
+             {
++                Constant *operand = vtblStruct->getOperand(ei);
++                // Sometimes ASAN adds padding to vtable by embedding them in structs
++                // so we should check and unpack them
++                if (!SVFUtil::isa<ConstantArray>(operand)) {
++                    ConstantStruct *opStruct = SVFUtil::dyn_cast<ConstantStruct>(operand);
++                    if(!opStruct) {
++                        // We should skip handling the padding, in the form of an array
++                        assert(SVFUtil::isa<ArrayType>(operand->getType()));
++                        continue;
++                    }
++                    operand = opStruct->getOperand(0);
++                }
+                 const ConstantArray *vtbl =
+-                    SVFUtil::dyn_cast<ConstantArray>(vtblStruct->getOperand(ei));
++                    SVFUtil::dyn_cast<ConstantArray>(operand);
+                 assert(vtbl && "Element of initializer not an array?");
+ 
+                 /*
+-- 
+2.17.1
+

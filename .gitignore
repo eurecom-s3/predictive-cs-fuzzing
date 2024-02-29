@@ -1,32 +1,31 @@
-# Prerequisites
-*.d
-
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
+*.bc
+*.bcc
 *.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
+*.pdf
+*.ll
+*.o
+*.resolution.txt
+*.S
+binutils*/
+*.csv
+*.png
 *.out
-*.app
+/setup.sh
+SVF/
+SVF2/
+llvm-9/
+*.taint
+dft.log
+dfsan_abilist.txt
+*.dot
+callgrind.*
+cachegrind.*
+*.function.list
+*.color
+*.txt
+*.indent
+*.log
+.vscode/
+benchmarks/*
+*.svg
+.DS_Store

@@ -1,0 +1,35 @@
+From eebe3d824cb29455732e9d7dac9911bc9711efde Mon Sep 17 00:00:00 2001
+From: Pietro Borrello <borrello@diag.uniroma1.it>
+Date: Fri, 28 May 2021 13:49:33 +0200
+Subject: contextDDA: add check on NULL refVal in isHeapCondMemObj
+
+---
+ lib/DDA/ContextDDA.cpp | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/lib/DDA/ContextDDA.cpp b/lib/DDA/ContextDDA.cpp
+index 6b37821..b53d1e0 100644
+--- a/lib/DDA/ContextDDA.cpp
++++ b/lib/DDA/ContextDDA.cpp
+@@ -316,7 +316,17 @@ bool ContextDDA::isHeapCondMemObj(const CxtVar& var, const StoreSVFGNode*)
+     assert(mem && "memory object is null??");
+     if(mem->isHeap())
+     {
+-        if(const Instruction* mallocSite = SVFUtil::dyn_cast<Instruction>(mem->getRefVal()))
++        if (!mem->getRefVal()) {
++            PAGNode *pnode = _pag->getPAGNode(getPtrNodeID(var));
++            if(GepObjPN* gepobj = SVFUtil::dyn_cast<GepObjPN>(pnode)) {
++                assert(SVFUtil::isa<DummyObjPN>(_pag->getPAGNode(gepobj->getBaseNode())) && "emtpy refVal in a gep object whose base is a non-dummy object");
++            }
++            else {
++                assert((SVFUtil::isa<DummyObjPN>(pnode) || SVFUtil::isa<DummyValPN>(pnode)) && "empty refVal in non-dummy object");
++            }
++            return true;
++        }
++        else if(const Instruction* mallocSite = SVFUtil::dyn_cast<Instruction>(mem->getRefVal()))
+         {
+             const Function* fun = mallocSite->getFunction();
+             const SVFFunction* svfFun = LLVMModuleSet::getLLVMModuleSet()->getSVFFunction(fun);
+-- 
+2.17.1
+
